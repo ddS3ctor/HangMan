@@ -21,17 +21,42 @@
             text-align: center;
             font-size: 24px;
         }
+        .status {
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1 style="text-align: center;">HangMan</h1>
+    <div class="status">
+        <p id="lives">Lives: 3</p>
+    </div>
     <table id="word-table"></table>
+    <div class="status">
+        <p id="score">Score: 0</p>
+        <p id="high-score">High Score: 0</p>
+        <button id="play-again" style="display:none;" onclick="startGame()">Play Again</button>
+    </div>
 
     <script>
+        let score = 0;
+        let highScore = 0;
+        let lives = 3;
+        let currentWord = '';
+        let solvedWords = new Set();
+
         async function fetchRandomWord() {
             const response = await fetch('/random_word');
             const word = await response.json();
-            displayWordTable(word);
+            if (solvedWords.size === 0) {
+                solvedWords.clear();
+            }
+            if (solvedWords.has(word)) {
+                return fetchRandomWord();
+            }
+            currentWord = word;
+            return word;
         }
 
         function displayWordTable(word) {
@@ -39,22 +64,111 @@
             table.innerHTML = '';
 
             const row = document.createElement('tr');
-            for (let letter of word) {
+            const wordLength = word.length;
+            const indicesToShow = getRandomIndices(wordLength, Math.ceil(wordLength / 2));
+
+            for (let i = 0; i < word.length; i++) {
                 const cell = document.createElement('td');
-                const input = document.createElement('input');
-                input.setAttribute('type', 'text');
-                input.setAttribute('maxlength', '1');
-                input.classList.add('letter-input');
-
-                input.dataset.letter = letter;
-
-                cell.appendChild(input);
+                if (indicesToShow.includes(i)) {
+                    cell.textContent = word[i];
+                } else {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'text');
+                    input.setAttribute('maxlength', '1');
+                    input.dataset.letter = word[i];
+                    input.addEventListener('input', checkLetter);
+                    cell.appendChild(input);
+                }
                 row.appendChild(cell);
             }
             table.appendChild(row);
         }
 
-        fetchRandomWord();
+        function getRandomIndices(length, count) {
+            const indices = [];
+            while (indices.length < count) {
+                const index = Math.floor(Math.random() * length);
+                if (!indices.includes(index)) {
+                    indices.push(index);
+                }
+            }
+            return indices;
+        }
+
+        function checkLetter(event) {
+            const input = event.target;
+            const guessedLetter = input.value.toLowerCase();
+            const correctLetter = input.dataset.letter.toLowerCase();
+
+            if (guessedLetter === correctLetter) {
+                input.disabled = true;
+                input.style.backgroundColor = '#d4edda';
+                score++;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                checkIfWordSolved();
+            } else {
+                input.value = '';
+                lives--;
+                document.getElementById('lives').textContent = `Lives: ${lives}`;
+                if (lives === 0) {
+                    gameOver();
+                }
+            }
+        }
+
+        function checkIfWordSolved() {
+            const inputs = document.querySelectorAll('input[type="text"]');
+            const allCorrect = Array.from(inputs).every(input => input.disabled);
+            if (allCorrect) {
+                solvedWords.add(currentWord);
+                setTimeout(() => {
+                    // lengOfWords();
+                    if (solvedWords.size === 4) {
+                        completeAllWords();
+                    } else {
+                        startGame();
+                    }
+                }, 1000);
+            }
+        }
+
+        async function lengOfWords() {
+            const response = await fetch('/random_word');
+            console.log(response.json);
+        }
+
+        function startGame() {
+            lives = 3;
+            document.getElementById('lives').textContent = `Lives: ${lives}`;
+            document.getElementById('play-again').style.display = 'none';
+
+            fetchRandomWord().then(word => {
+                displayWordTable(word);
+            });
+        }
+
+        function completeAllWords() {
+            if (score > highScore) {
+                highScore = score;
+            }
+            alert(`Congratulations! You've completed all words. Your final score is ${score}. High Score: ${highScore}`);
+            document.getElementById('high-score').textContent = `High Score: ${highScore}`;
+            document.getElementById('play-again').style.display = 'block';
+        }
+
+        function gameOver() {
+            alert(`Game Over! Your final score is ${score}. High Score: ${highScore}`);
+            document.getElementById('play-again').style.display = 'block';
+            if (score > highScore) {
+                highScore = score;
+                document.getElementById('high-score').textContent = `High Score: ${highScore}`;
+            }
+            score = 0;
+            document.getElementById('score').textContent = `Score: ${score}`;
+            solvedWords.clear();
+        }
+
+        startGame();
     </script>
 </body>
 </html>
