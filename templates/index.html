@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HangMan</title>
+    <style>
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 24px;
+            width: 50px;
+        }
+        input[type="text"] {
+            width: 30px;
+            text-align: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">HangMan</h1>
+    <table id="word-table"></table>
+
+    <script>
+        async function fetchRandomWord() {
+            const response = await fetch('/random_word');
+            const word = await response.json();
+            displayWordTable(word);
+        }
+
+        function displayWordTable(word) {
+            const table = document.getElementById('word-table');
+            table.innerHTML = '';
+
+            const row = document.createElement('tr');
+            for (let letter of word) {
+                const cell = document.createElement('td');
+                const input = document.createElement('input');
+                input.setAttribute('type', 'text');
+                input.setAttribute('maxlength', '1');
+                input.classList.add('letter-input');
+
+                input.dataset.letter = letter;
+
+                cell.appendChild(input);
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+
+        fetchRandomWord();
+    </script>
+</body>
+</html>
