@@ -9,11 +9,9 @@ def play():
     # while words.length() > 0:
     #     continue
     word_length = len(words[2])
-    hiddenIndeces = word_length // 2
     print_table(words[2], hide_indeces(words[2]))
 
 def solve(word):
-    fill_chars = []
 
     print_table(word)
 
@@ -32,10 +30,10 @@ def hide_indeces(word):
     return hidden
 
 
-def print_table(word, hiddenIndeces):
-    print(hiddenIndeces)
+def print_table(word, hidden_indeces):
     colums = len(word)
     score = 0
+    lives = 0
 
     print('+---' * colums + '+')
     print(end='|')
@@ -46,7 +44,7 @@ def print_table(word, hiddenIndeces):
     print('+---' * colums + '+')
     print(end='|')
     for column in range(colums):
-        if column in hiddenIndeces: print(end=' _ |')
+        if column in hidden_indeces: print(end=' _ |')
         else: print(end=' ' + word[column] + ' |')
     print()
     print('+---' * colums + '+')
@@ -55,6 +53,7 @@ def print_table(word, hiddenIndeces):
     elif len(str(score)) == 2: print(end='| score: ' + str(score) + ' |')
     elif len(str(score)) == 3: print(end='| score: ' + str(score) + '|')
     print()
+    print('| lives:  ' + str(lives) + ' |')
     print('+' + '---' * 3 + '--+')
 
 
